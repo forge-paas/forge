@@ -10,6 +10,7 @@ import NodeViewTable from "@/components/node-view";
 import { NodeSelector } from "@/components/node-selector";
 import { ProjectSelector } from "@/components/project-selector";
 import ProjectViewTable from "@/components/project-view";
+import { Id } from "../../convex/_generated/dataModel";
 
 export default function Home() {
 	return (
@@ -30,8 +31,8 @@ function Content() {
 	const [repoUrl, setRepoUrl] = useState("");
 	const [isCopied, setIsCopied] = useState(false);
 
-	const [node, setNode] = useState("");
-	const [project, setProject] = useState("");
+	const [node, setNode] = useState<Id<"nodes">>();
+	const [project, setProject] = useState<Id<"projects">>();
 
 	const tokenAction = useAction(api.nodes.nodejs.actions.createRegistrationToken);
 	const createProjectMutation = useMutation(api.projects.mutations.createProject);
@@ -40,6 +41,15 @@ function Content() {
 	const generateToken = async () => {
 		const regToken = await tokenAction();
 		setToken(regToken);
+	}
+
+	const createDeploymentMutation = useMutation(api.deployments.mutations.createDeployment);
+
+	const idx = Math.floor(Math.random() * 5000);
+
+	const deployProject = async () => {
+		if (!node || !project) return;
+		await createDeploymentMutation({ name: `Deployment ${idx}`, nodeId: node, projectId: project, imageUri: "", branch: "main", status: "queued", sha: "" });
 	}
 
 	return (
@@ -70,13 +80,13 @@ function Content() {
 				</p>
 			</div>
 			<div className="w-3xl">
-				<NodeSelector setNode={setNode} />
+				<NodeSelector value={node} onChange={setNode} />
 			</div>
 			<div className="w-5xl">
 				<ProjectViewTable />
 			</div>
 			<div className="w-3xl">
-				<ProjectSelector setProject={setProject} />
+				<ProjectSelector value={project} onChange={setProject} />
 			</div>
 			<Button onClick={() => {
 				if (repoUrl) createProjectMutation({
@@ -87,7 +97,8 @@ function Content() {
 					repoUrl: repoUrl
 				});
 			}} className="w-fit">Create Project</Button>
-			<Button className="w-fit">Deploy!!!</Button>
+			<p>{project}<br />{node}</p>
+			<Button onClick={() => deployProject()} className="w-fit">Deploy!!!</Button>
 		</>
 	);
 }
