@@ -4,10 +4,11 @@ import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
 import crypto from "node:crypto";
 
-const KEK = process.env.MASTER_KEY!;
+const KEK = Buffer.from(process.env.MASTER_KEY!, "hex");
 
 export const encryptEnvVariable = internalAction({
 	args: {
+		key: v.string(),
 		value: v.string()
 	},
 	handler: (_, args) => {
@@ -34,7 +35,7 @@ export const encryptEnvVariable = internalAction({
 		const wrapTag = wrapCipher.getAuthTag();
 
 		return {
-			alg: "AES-256-GCM",
+			key: args.key,
 			wrappedKey: wrappedKey.toString("base64"),
 			wrapIv: wrapIv.toString("base64"),
 			wrapTag: wrapTag.toString("base64"),
@@ -47,19 +48,18 @@ export const encryptEnvVariable = internalAction({
 
 export const decryptEnvVariable = internalAction({
 	args: {
-		envelope: v.object({
-			wrappedKey: v.string(),
-			wrapIv: v.string(),
-			wrapTag: v.string(),
-			ciphertext: v.string(),
-			dataIv: v.string(),
-			dataTag: v.string(),
-		})
+		key: v.string(),
+		wrappedKey: v.string(),
+		wrapIv: v.string(),
+		wrapTag: v.string(),
+		ciphertext: v.string(),
+		dataIv: v.string(),
+		dataTag: v.string(),
 	},
-	handler: (_, { envelope }) => {
-		const wrappedKey = Buffer.from(envelope.wrappedKey, "base64");
-		const wrapIv = Buffer.from(envelope.wrapIv, "base64");
-		const wrapTag = Buffer.from(envelope.wrapTag, "base64");
+	handler: (_, args) => {
+		const wrappedKey = Buffer.from(args.wrappedKey, "base64");
+		const wrapIv = Buffer.from(args.wrapIv, "base64");
+		const wrapTag = Buffer.from(args.wrapTag, "base64");
 
 		const unwrapCipher = crypto.createDecipheriv(
 			"aes-256-gcm",
@@ -74,9 +74,9 @@ export const decryptEnvVariable = internalAction({
 			unwrapCipher.final(),
 		]);
 
-		const ciphertext = Buffer.from(envelope.ciphertext, "base64");
-		const dataIv = Buffer.from(envelope.dataIv, "base64");
-		const dataTag = Buffer.from(envelope.dataTag, "base64");
+		const ciphertext = Buffer.from(args.ciphertext, "base64");
+		const dataIv = Buffer.from(args.dataIv, "base64");
+		const dataTag = Buffer.from(args.dataTag, "base64");
 
 		const decipher = crypto.createDecipheriv(
 			"aes-256-gcm",
@@ -91,6 +91,6 @@ export const decryptEnvVariable = internalAction({
 			decipher.final(),
 		]);
 
-		return plaintext.toString("utf8");
+		return { key: args.key, value: plaintext.toString("utf8") };
 	}
 })

@@ -12,6 +12,7 @@ import { ProjectSelector } from "@/components/project-selector";
 import ProjectViewTable from "@/components/project-view";
 import { Id } from "../../convex/_generated/dataModel";
 import { Textarea } from "@/components/ui/textarea";
+import { createProjectSecrets } from "../../convex/environments/actions";
 
 export default function Home() {
 	return (
@@ -40,6 +41,7 @@ function Content() {
 	const [env, setEnv] = useState<string>();
 
 	const tokenAction = useAction(api.nodes.nodejs.actions.createRegistrationToken);
+	const createProjectSecretsAction = useAction(api.environments.actions.createProjectSecrets);
 	const createProjectMutation = useMutation(api.projects.mutations.createProject);
 	const createEnvMutation = useMutation(api.environments.mutations.createProjectEnvironment);
 	const currentUser = useQuery(api.users.queries.current);
@@ -97,19 +99,18 @@ function Content() {
 			<Button onClick={async () => {
 				if (isRepoUrlValid) {
 					const projectId = await createProjectMutation({
-						name: repoUrl.split("/").reverse()[0],
+						name: repoUrl.split("/").reverse()[0].split(".git")[0],
 						ownerId: currentUser?._id!,
-						framework: "",
+						framework: "Unknown",
 						defaultBranch: "main",
 						repoUrl: repoUrl
 					});
 
 					if (env) {
-						createEnvMutation({
-							id: projectId,
-							envString: env
-						})
+						const envId = await createEnvMutation({ id: projectId });
+						await createProjectSecretsAction({ envId: envId, envString: env })
 					}
+
 				}
 			}} className="w-fit">Create Project</Button>
 			<div className="w-5xl">

@@ -1,6 +1,7 @@
 import { internal } from "../_generated/api";
 import { httpAction } from "../_generated/server"
 
+// TODO: Fix object level authorization
 export const setProjectFrameworkAction = httpAction(async (ctx, req) => {
 	const authHeader = req.headers.get("Authorization")
 	const nodeToken = authHeader?.split(" ")[1] ?? "";
