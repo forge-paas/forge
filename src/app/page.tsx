@@ -119,7 +119,7 @@ function Content() {
 			<div className="w-5xl">
 				<ProjectSelector value={project} onChange={setProject} />
 			</div>
-			<p>{project}<br />{node}</p>
+			<p>Project ID: {project}<br />Node ID: {node}</p>
 			<Button onClick={() => deployProject()} className="w-fit">Deploy!!!</Button>
 		</>
 	);
