@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type DeploymentStatus = "queued" | "processing" | "completed";
+type DeploymentStatus = "queued" | "processing" | "completed" | "failed";
 
 const STATUS_CONFIG: Record<DeploymentStatus, { label: string; dotClass: string; ringClass: string; textClass: string }> = {
 	queued: {
@@ -22,6 +22,12 @@ const STATUS_CONFIG: Record<DeploymentStatus, { label: string; dotClass: string;
 		ringClass: "border-[var(--status-completed)]/50",
 		textClass: "text-[var(--status-completed)]",
 	},
+	failed: {
+		label: "failed",
+		dotClass: "bg-[var(--status-failed)]",
+		ringClass: "border-[var(--status-failed)]/50",
+		textClass: "text-[var(--status-failed)]"
+	}
 };
 
 export function StatusBadge({

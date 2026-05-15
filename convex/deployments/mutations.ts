@@ -28,7 +28,7 @@ export const setDeploymentStatus = internalMutation({
 	args: {
 		nodeId: v.id("nodes"),
 		id: v.id("deployments"),
-		status: v.union(v.literal("queued"), v.literal("processing"), v.literal("completed")),
+		status: v.union(v.literal("queued"), v.literal("processing"), v.literal("completed"), v.literal("failed")),
 	},
 	handler: async (ctx, args) => {
 		const row = await ctx.db.get("deployments", args.id);

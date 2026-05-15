@@ -34,7 +34,7 @@ export default defineSchema({
 		projectId: v.id("projects"),
 		imageUri: v.string(),
 		branch: v.string(),
-		status: v.union(v.literal("queued"), v.literal("processing"), v.literal("completed")),
+		status: v.union(v.literal("queued"), v.literal("processing"), v.literal("completed"), v.literal("failed")),
 		sha: v.string(),
 	}).index("by_nodeId", ["nodeId"])
 		.index("by_projectId", ["projectId"]),
