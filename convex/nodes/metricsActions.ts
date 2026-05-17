@@ -46,8 +46,8 @@ export const getNodeMetrics = action({
 		const range = args.rangeMinutes ?? 15;
 		const end = Math.floor(Date.now() / 1000);
 		const start = end - range * 60;
-		// aim for ~60 points
-		const step = Math.max(15, Math.floor((range * 60) / 60));
+		// aim for ~180 points; 5s floor matches the Prometheus scrape interval
+		const step = Math.max(5, Math.floor((range * 60) / 180));
 
 		const [cpu, memory, disk] = await Promise.all([
 			rangeQuery(promUrl, `forge_node_cpu_percent${sel}`, start, end, step),

@@ -7,7 +7,7 @@ import { api } from "../../convex/_generated/api";
 type Point = { t: number; v: number };
 type Series = { cpu: Point[]; memory: Point[]; disk: Point[] };
 
-const REFRESH_MS = 15_000;
+const REFRESH_MS = 5_000;
 const RANGE_MINUTES = 15;
 
 export function NodeMetrics({ nodeId }: { nodeId: string }) {
