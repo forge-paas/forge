@@ -66,12 +66,16 @@ export default function InfraTemplateDetailPage() {
 	const [publicPorts, setPublicPorts] = React.useState<{ name: string; containerPort: string }[]>([
 		{ name: "", containerPort: "" },
 	]);
+	const [postInstall, setPostInstall] = React.useState<{ name: string; service: string; command: string }[] | null>(null);
 	const [deploying, setDeploying] = React.useState(false);
 
 	React.useEffect(() => {
 		if (template && yaml === null) {
 			setYaml(template.composeYaml);
 			setContainerName(`${template.identifier}-${Math.floor(Math.random() * 5000)}`);
+			setPostInstall(
+				(template.postInstall ?? []).map((c) => ({ name: c.name, service: c.service, command: c.command })),
+			);
 		}
 	}, [template, yaml]);
 
@@ -123,6 +127,14 @@ export default function InfraTemplateDetailPage() {
 	const addPort = () => setPublicPorts((prev) => [...prev, { name: "", containerPort: "" }]);
 	const removePort = (i: number) => setPublicPorts((prev) => prev.filter((_, idx) => idx !== i));
 
+	const validPostInstall = (postInstall ?? [])
+		.map((c) => ({ name: c.name.trim(), service: c.service.trim(), command: c.command.trim() }))
+		.filter((c) => c.name !== "" && c.service !== "" && c.command !== "");
+	const updateCmd = (i: number, patch: Partial<{ name: string; service: string; command: string }>) =>
+		setPostInstall((prev) => (prev ?? []).map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
+	const addCmd = () => setPostInstall((prev) => [...(prev ?? []), { name: "", service: "", command: "" }]);
+	const removeCmd = (i: number) => setPostInstall((prev) => (prev ?? []).filter((_, idx) => idx !== i));
+
 	const handleDeploy = async () => {
 		if (!ready || !user || !nodeId || yaml === null) return;
 		setDeploying(true);
@@ -133,6 +145,7 @@ export default function InfraTemplateDetailPage() {
 				templateId: id,
 				containerName: containerName.trim(),
 				composeYaml: yaml,
+				postInstall: validPostInstall.length > 0 ? validPostInstall : undefined,
 			});
 			if (envString.trim() !== "") {
 				const envId = await createInfraEnvironment({ id: containerId });
@@ -196,6 +209,74 @@ export default function InfraTemplateDetailPage() {
 							size="sm"
 							disabled={!dirty}
 							onClick={() => setYaml(template.composeYaml)}
+							className="gap-1.5"
+						>
+							<ArrowCounterClockwiseIcon className="size-3.5" /> reset
+						</Button>
+					</PanelFooter>
+				</Panel>
+
+				<Panel tag="P" label="Postinstall" caption="run on demand · after deploy">
+					<PanelBody className="space-y-3">
+						<p className="text-[11px] leading-relaxed text-muted-foreground">
+							Commands you can run on demand against this deployment once it is live (e.g. generate an
+							admin key, seed a database). Each runs inside a compose service via <code className="text-foreground">docker compose exec</code>.
+							Output is shown temporarily and never written to permanent logs.
+						</p>
+						{(postInstall ?? []).length === 0 ? (
+							<p className="text-[11px] text-muted-foreground/70">No postinstall commands defined.</p>
+						) : (
+							<div className="flex flex-col gap-3">
+								{(postInstall ?? []).map((c, i) => (
+									<div key={i} className="flex flex-col gap-2 border border-dashed border-border bg-card/40 px-3 py-3">
+										<div className="flex items-center gap-2">
+											<Input
+												value={c.name}
+												onChange={(e) => updateCmd(i, { name: e.target.value })}
+												placeholder="generate admin key"
+												className="bg-card/60"
+											/>
+											<Input
+												value={c.service}
+												onChange={(e) => updateCmd(i, { service: e.target.value })}
+												placeholder="service"
+												className="w-40 bg-card/60"
+											/>
+											<Button
+												type="button"
+												variant="ghost"
+												size="icon-sm"
+												onClick={() => removeCmd(i)}
+												aria-label="remove command"
+											>
+												<TrashIcon className="size-3.5" />
+											</Button>
+										</div>
+										<Input
+											value={c.command}
+											onChange={(e) => updateCmd(i, { command: e.target.value })}
+											placeholder="npx convex run ..."
+											className="bg-card/60 font-mono text-[11px]"
+										/>
+									</div>
+								))}
+							</div>
+						)}
+						<Button type="button" variant="outline" size="sm" onClick={addCmd} className="gap-1.5 self-start">
+							<PlusIcon className="size-3.5" /> add command
+						</Button>
+					</PanelBody>
+					<PanelFooter>
+						<span className="tabular-nums">{validPostInstall.length} command{validPostInstall.length === 1 ? "" : "s"}</span>
+						<Button
+							variant="ghost"
+							size="sm"
+							disabled={!template.postInstall || template.postInstall.length === 0}
+							onClick={() =>
+								setPostInstall(
+									(template.postInstall ?? []).map((c) => ({ name: c.name, service: c.service, command: c.command })),
+								)
+							}
 							className="gap-1.5"
 						>
 							<ArrowCounterClockwiseIcon className="size-3.5" /> reset

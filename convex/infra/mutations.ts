@@ -8,6 +8,11 @@ export const createInfraContainer = mutation({
 		templateId: v.id("infraTemplates"),
 		containerName: v.string(),
 		composeYaml: v.string(),
+		postInstall: v.optional(v.array(v.object({
+			name: v.string(),
+			service: v.string(),
+			command: v.string(),
+		}))),
 	},
 	handler: async (ctx, args) => {
 		return await ctx.db.insert("infraContainers", {
@@ -16,6 +21,7 @@ export const createInfraContainer = mutation({
 			templateId: args.templateId,
 			containerName: args.containerName,
 			composeYaml: args.composeYaml,
+			postInstall: args.postInstall,
 		});
 	}
 });

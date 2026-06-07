@@ -8,6 +8,7 @@ import { deleteNode, setHeartbeatAction } from "../convex/nodes/actions"
 import { finalizeDeleteAction, getPendingDeletesAction, getQueuedDeploymentsAction, setDeploymentStatusAction } from "./deployments/actions";
 import { setProjectFrameworkAction } from "./projects/actions";
 import { getEnvironmentSecretsAction } from "./environments/actions";
+import { getQueuedPostInstallAction, setPostInstallResultAction } from "./postinstall/actions";
 
 const http = httpRouter();
 
@@ -80,6 +81,18 @@ http.route({
 	path: "/environments/secrets",
 	method: "POST",
 	handler: getEnvironmentSecretsAction
+})
+
+http.route({
+	path: "/postinstall/queued",
+	method: "POST",
+	handler: getQueuedPostInstallAction
+})
+
+http.route({
+	path: "/postinstall/result",
+	method: "POST",
+	handler: setPostInstallResultAction
 })
 
 http.route({

@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/empty-state";
 import { CircleNotchIcon, GithubLogoIcon, HardDrivesIcon, FolderIcon, ProhibitIcon, CubeIcon } from "@phosphor-icons/react";
 import { relativeTime, shortId } from "@/lib/format";
 import { DeploymentLogStream } from "@/components/deployment-log-stream";
+import { PostInstallPanel } from "@/components/postinstall-panel";
 
 export default function DeploymentDetailPage() {
 	const params = useParams<{ id: string }>();
@@ -191,6 +192,14 @@ export default function DeploymentDetailPage() {
 							<span className="tabular-nums">{dep.infra.composeYaml.split("\n").length} lines</span>
 						</PanelFooter>
 					</Panel>
+				)}
+
+				{dep.type === "infra" && dep.infra && dep.infra.postInstall && dep.infra.postInstall.length > 0 && (
+					<PostInstallPanel
+						deploymentId={dep._id}
+						commands={dep.infra.postInstall}
+						canRun={dep.status === "completed"}
+					/>
 				)}
 
 				<Panel tag="C" label="Build output" caption="logs · stream">

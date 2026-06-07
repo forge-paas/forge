@@ -38,6 +38,11 @@ export default defineSchema({
 		logoUrl: v.string(),
 		composeYaml: v.string(),
 		canBePublic: v.optional(v.boolean()),
+		postInstall: v.optional(v.array(v.object({
+			name: v.string(),
+			service: v.string(),
+			command: v.string(),
+		}))),
 	}),
 	infraContainers: defineTable({
 		nodeId: v.id("nodes"),
@@ -45,8 +50,29 @@ export default defineSchema({
 		templateId: v.id("infraTemplates"),
 		containerName: v.string(),
 		composeYaml: v.string(),
+		postInstall: v.optional(v.array(v.object({
+			name: v.string(),
+			service: v.string(),
+			command: v.string(),
+		}))),
 	})
 		.index("by_ownerId", ["ownerId"])
+		.index("by_nodeId", ["nodeId"]),
+	postInstallRuns: defineTable({
+		deploymentId: v.id("deployments"),
+		nodeId: v.id("nodes"),
+		name: v.string(),
+		service: v.string(),
+		command: v.string(),
+		status: v.union(
+			v.literal("queued"),
+			v.literal("running"),
+			v.literal("done"),
+			v.literal("failed"),
+		),
+		output: v.string(),
+		exitCode: v.optional(v.number()),
+	}).index("by_deploymentId", ["deploymentId"])
 		.index("by_nodeId", ["nodeId"]),
 	deployments: defineTable({
 		name: v.string(),
