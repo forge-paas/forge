@@ -1,7 +1,7 @@
 import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
-export const setLastHearbeatTime = internalMutation({
+export const setLastHeartbeatTime = internalMutation({
 	args: { time: v.number(), nodeId: v.id("nodes") },
 	handler: async (ctx, args) => {
 		return await ctx.db.patch("nodes", args.nodeId, { lastHeartbeat: args.time })

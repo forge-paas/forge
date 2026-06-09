@@ -72,7 +72,7 @@ export const setHeartbeatAction = httpAction(async (ctx, req) => {
 		return new Response(null, { status: 200 });
 	}
 
-	await ctx.runMutation(internal.nodes.mutations.setLastHearbeatTime, {
+	await ctx.runMutation(internal.nodes.mutations.setLastHeartbeatTime, {
 		time: Date.now(),
 		nodeId: node._id
 	});

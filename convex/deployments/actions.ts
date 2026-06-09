@@ -3,16 +3,9 @@ import { api, internal } from "../_generated/api";
 import { action, httpAction } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 import { applyIngressRule, ensureDnsCname, removeDnsCname, removeIngressRule } from "../lib/cfTunnel";
+import { generateDepName } from "../lib/generator";
 
 const ROOT_DOMAIN = "parthajeet.xyz";
-
-function slugify(input: string): string {
-	return input
-		.toLowerCase()
-		.replace(/[^a-z0-9-]+/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^-+|-+$/g, "");
-}
 
 export const createDeployment = action({
 	args: {
@@ -33,7 +26,7 @@ export const createDeployment = action({
 		if (!project) throw new Error("Project not found");
 
 		const tunnelId = node.cloudflareTunnelId;
-		const slug = slugify(project.name) || args.projectId;
+		const slug = generateDepName();
 		const publicUrl = `${slug}.${ROOT_DOMAIN}`;
 
 		await ensureDnsCname(publicUrl, tunnelId);
@@ -248,3 +241,17 @@ export const setDeploymentStatusAction = httpAction(async (ctx, req) => {
 
 	return new Response(null, { status: 200 });
 })
+
+export const setDeploymentHealthCheckAction = httpAction(async (ctx, req) => {
+	const url = new URL(req.url);
+	const depId: Id<"deployments"> = url.pathname.split("/").filter(Boolean).at(-1) as Id<"deployments">;
+	const token = url.searchParams.get("token") ?? "";
+	if (!token) {
+		return new Response(null, { status: 401 });
+	}
+	const ok = await ctx.runMutation(internal.deployments.mutations.updateHealthTimestamp, {
+		id: depId,
+		token,
+	});
+	return new Response(null, { status: ok ? 200 : 401 });
+});

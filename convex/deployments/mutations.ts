@@ -2,6 +2,19 @@ import { v } from "convex/values";
 import { internalMutation, mutation } from "../_generated/server";
 import { getCurrentUser } from "../users/queries";
 
+export const updateHealthTimestamp = internalMutation({
+	args: {
+		id: v.id("deployments"),
+		token: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const dep = await ctx.db.get("deployments", args.id);
+		if (!dep || !dep.healthToken || dep.healthToken !== args.token) return false;
+		await ctx.db.patch("deployments", args.id, { lastHealthCheck: Date.now() });
+		return true;
+	}
+})
+
 export const insertDeployment = internalMutation({
 	args: {
 		name: v.string(),
@@ -33,6 +46,8 @@ export const insertDeployment = internalMutation({
 			imageUri: args.imageUri,
 			publicUrl: args.publicUrl,
 			routes: args.routes,
+			lastHealthCheck: Date.now(),
+			healthToken: crypto.randomUUID(),
 		})
 	}
 });

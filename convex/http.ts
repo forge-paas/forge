@@ -5,10 +5,11 @@ import type { WebhookEvent } from "@clerk/backend";
 import { Webhook } from "svix";
 
 import { deleteNode, setHeartbeatAction } from "../convex/nodes/actions"
-import { finalizeDeleteAction, getPendingDeletesAction, getQueuedDeploymentsAction, setDeploymentStatusAction } from "./deployments/actions";
+import { finalizeDeleteAction, getPendingDeletesAction, getQueuedDeploymentsAction, setDeploymentHealthCheckAction, setDeploymentStatusAction } from "./deployments/actions";
 import { setProjectFrameworkAction } from "./projects/actions";
 import { getEnvironmentSecretsAction } from "./environments/actions";
 import { getQueuedPostInstallAction, setPostInstallResultAction } from "./postinstall/actions";
+import { getInfraHealthChecksAction } from "./infra/health";
 
 const http = httpRouter();
 
@@ -72,6 +73,12 @@ http.route({
 })
 
 http.route({
+	pathPrefix: "/deployments/health/",
+	method: "GET",
+	handler: setDeploymentHealthCheckAction,
+})
+
+http.route({
 	path: "/projects/framework",
 	method: "PATCH",
 	handler: setProjectFrameworkAction
@@ -93,6 +100,12 @@ http.route({
 	path: "/postinstall/result",
 	method: "POST",
 	handler: setPostInstallResultAction
+})
+
+http.route({
+	path: "/deployments/infra-health",
+	method: "POST",
+	handler: getInfraHealthChecksAction
 })
 
 http.route({

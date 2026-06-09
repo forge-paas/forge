@@ -43,6 +43,10 @@ export default defineSchema({
 			service: v.string(),
 			command: v.string(),
 		}))),
+		healthCheck: v.optional(v.object({
+			service: v.string(),
+			command: v.string(),
+		})),
 	}),
 	infraContainers: defineTable({
 		nodeId: v.id("nodes"),
@@ -55,6 +59,10 @@ export default defineSchema({
 			service: v.string(),
 			command: v.string(),
 		}))),
+		healthCheck: v.optional(v.object({
+			service: v.string(),
+			command: v.string(),
+		})),
 	})
 		.index("by_ownerId", ["ownerId"])
 		.index("by_nodeId", ["nodeId"]),
@@ -97,6 +105,8 @@ export default defineSchema({
 			v.literal("deleting"),
 		),
 		sha: v.string(),
+		lastHealthCheck: v.number(),
+		healthToken: v.optional(v.string()),
 	}).index("by_nodeId", ["nodeId"])
 		.index("by_projectId", ["projectId"])
 		.index("by_infraId", ["infraId"]),

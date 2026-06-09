@@ -13,6 +13,10 @@ export const createInfraContainer = mutation({
 			service: v.string(),
 			command: v.string(),
 		}))),
+		healthCheck: v.optional(v.object({
+			service: v.string(),
+			command: v.string(),
+		})),
 	},
 	handler: async (ctx, args) => {
 		return await ctx.db.insert("infraContainers", {
@@ -22,6 +26,7 @@ export const createInfraContainer = mutation({
 			containerName: args.containerName,
 			composeYaml: args.composeYaml,
 			postInstall: args.postInstall,
+			healthCheck: args.healthCheck,
 		});
 	}
 });

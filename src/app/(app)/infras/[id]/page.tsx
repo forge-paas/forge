@@ -67,6 +67,7 @@ export default function InfraTemplateDetailPage() {
 		{ name: "", containerPort: "" },
 	]);
 	const [postInstall, setPostInstall] = React.useState<{ name: string; service: string; command: string }[] | null>(null);
+	const [healthCheck, setHealthCheck] = React.useState<{ service: string; command: string }>({ service: "", command: "" });
 	const [deploying, setDeploying] = React.useState(false);
 
 	React.useEffect(() => {
@@ -76,6 +77,10 @@ export default function InfraTemplateDetailPage() {
 			setPostInstall(
 				(template.postInstall ?? []).map((c) => ({ name: c.name, service: c.service, command: c.command })),
 			);
+			setHealthCheck({
+				service: template.healthCheck?.service ?? "",
+				command: template.healthCheck?.command ?? "",
+			});
 		}
 	}, [template, yaml]);
 
@@ -135,6 +140,11 @@ export default function InfraTemplateDetailPage() {
 	const addCmd = () => setPostInstall((prev) => [...(prev ?? []), { name: "", service: "", command: "" }]);
 	const removeCmd = (i: number) => setPostInstall((prev) => (prev ?? []).filter((_, idx) => idx !== i));
 
+	const validHealthCheck =
+		healthCheck.service.trim() !== "" && healthCheck.command.trim() !== ""
+			? { service: healthCheck.service.trim(), command: healthCheck.command.trim() }
+			: undefined;
+
 	const handleDeploy = async () => {
 		if (!ready || !user || !nodeId || yaml === null) return;
 		setDeploying(true);
@@ -146,6 +156,7 @@ export default function InfraTemplateDetailPage() {
 				containerName: containerName.trim(),
 				composeYaml: yaml,
 				postInstall: validPostInstall.length > 0 ? validPostInstall : undefined,
+				healthCheck: validHealthCheck,
 			});
 			if (envString.trim() !== "") {
 				const envId = await createInfraEnvironment({ id: containerId });
@@ -276,6 +287,48 @@ export default function InfraTemplateDetailPage() {
 								setPostInstall(
 									(template.postInstall ?? []).map((c) => ({ name: c.name, service: c.service, command: c.command })),
 								)
+							}
+							className="gap-1.5"
+						>
+							<ArrowCounterClockwiseIcon className="size-3.5" /> reset
+						</Button>
+					</PanelFooter>
+				</Panel>
+
+				<Panel tag="H" label="Health check" caption="periodic · liveness probe">
+					<PanelBody className="space-y-3">
+						<p className="text-[11px] leading-relaxed text-muted-foreground">
+							A command run periodically inside a compose service via <code className="text-foreground">docker compose exec</code>.
+							Exit code <code className="text-foreground">0</code> marks the deployment healthy (e.g.
+							<code className="text-foreground"> pg_isready</code>, <code className="text-foreground">redis-cli ping</code>).
+							Leave blank to skip health checks for non-probeable infra.
+						</p>
+						<div className="flex items-center gap-2">
+							<Input
+								value={healthCheck.service}
+								onChange={(e) => setHealthCheck((prev) => ({ ...prev, service: e.target.value }))}
+								placeholder="service"
+								className="w-40 bg-card/60"
+							/>
+							<Input
+								value={healthCheck.command}
+								onChange={(e) => setHealthCheck((prev) => ({ ...prev, command: e.target.value }))}
+								placeholder="pg_isready -U postgres"
+								className="flex-1 bg-card/60 font-mono text-[11px]"
+							/>
+						</div>
+					</PanelBody>
+					<PanelFooter>
+						<span className="tabular-nums">{validHealthCheck ? "1 probe" : "no probe"}</span>
+						<Button
+							variant="ghost"
+							size="sm"
+							disabled={!template.healthCheck}
+							onClick={() =>
+								setHealthCheck({
+									service: template.healthCheck?.service ?? "",
+									command: template.healthCheck?.command ?? "",
+								})
 							}
 							className="gap-1.5"
 						>

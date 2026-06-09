@@ -16,8 +16,9 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { ConfirmRedeployDialog } from "@/components/confirm-redeploy-dialog";
 import { EmptyState } from "@/components/empty-state";
-import { CircleNotchIcon, GithubLogoIcon, HardDrivesIcon, FolderIcon, ProhibitIcon, CubeIcon } from "@phosphor-icons/react";
-import { relativeTime, shortId } from "@/lib/format";
+import { CircleNotchIcon, GithubLogoIcon, HardDrivesIcon, FolderIcon, ProhibitIcon, CubeIcon, PulseIcon, GlobeIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { relativeTime, relativeTimeIntl, shortId } from "@/lib/format";
+import { useNow } from "@/hooks/use-now";
 import { DeploymentLogStream } from "@/components/deployment-log-stream";
 import { PostInstallPanel } from "@/components/postinstall-panel";
 
@@ -31,6 +32,7 @@ export default function DeploymentDetailPage() {
 	const deleteDeployment = useAction(api.deployments.actions.deleteDeployment);
 	const [redeploying, setRedeploying] = React.useState(false);
 	const [cancelling, setCancelling] = React.useState(false);
+	const now = useNow(1000);
 
 	const handleCancel = async () => {
 		setCancelling(true);
@@ -95,6 +97,15 @@ export default function DeploymentDetailPage() {
 						<div className="flex items-center gap-4 text-[11px] tracking-[0.06em] tabular-nums text-muted-foreground">
 							<span>branch · <span className="text-foreground">{dep.branch}</span></span>
 							{dep.sha && <span>sha · <span className="text-foreground">{shortId(dep.sha, 7, 0)}</span></span>}
+							{dep.status === "completed" && (dep.type === "project" || !!dep.infra?.healthCheck) && (
+								<span className="inline-flex items-center gap-1.5 normal-case">
+									<PulseIcon
+										className={`size-3 ${now - dep.lastHealthCheck < 90_000 ? "text-[var(--status-completed)]" : "text-[var(--status-failed)]"}`}
+										weight={now - dep.lastHealthCheck < 90_000 ? "fill" : "regular"}
+									/>
+									<span>health · <span className="text-foreground">{relativeTimeIntl(dep.lastHealthCheck, now)}</span></span>
+								</span>
+							)}
 						</div>
 					</div>
 				</header>
@@ -209,6 +220,27 @@ export default function DeploymentDetailPage() {
 						<span>loki · {dep._id.slice(0, 8)}</span>
 					</PanelFooter>
 				</Panel>
+
+				{dep.publicUrl && (
+					<Panel tag="U" label="Public URL" caption="ingress · live">
+						<PanelBody className="text-xs">
+							<a
+								href={`https://${dep.publicUrl}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="group inline-flex items-center gap-2 font-medium text-foreground hover:text-primary"
+							>
+								<GlobeIcon className="size-4 text-primary" />
+								<span className="hover:underline underline-offset-2">{dep.publicUrl}</span>
+								<ArrowSquareOutIcon className="size-3.5 text-muted-foreground transition-colors group-hover:text-primary" />
+							</a>
+						</PanelBody>
+						<PanelFooter>
+							<span>section U · public url</span>
+							<span className="tabular-nums">https</span>
+						</PanelFooter>
+					</Panel>
+				)}
 
 				{dep.routes && dep.routes.length > 0 && (
 					<Panel tag="R" label="Public routes" caption="ingress · cloudflare">
