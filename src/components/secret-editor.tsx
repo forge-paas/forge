@@ -13,6 +13,7 @@ import {
 	XIcon,
 	CircleNotchIcon,
 	KeyIcon,
+	CopyIcon,
 } from "@phosphor-icons/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -44,9 +45,30 @@ export function SecretEditor({ projectId }: { projectId: Id<"projects"> }) {
 	const [newKey, setNewKey] = React.useState("");
 	const [newValue, setNewValue] = React.useState("");
 	const [savingNew, setSavingNew] = React.useState(false);
+	const [copying, setCopying] = React.useState(false);
 
 	const loading = data === undefined;
 	const secrets = data?.secrets ?? [];
+
+	const copyAll = async () => {
+		setCopying(true);
+		try {
+			const lines = await Promise.all(
+				secrets.map(async ({ id, key }) => {
+					const value = revealed[id] ?? (await revealAction({ id: id as Id<"secrets"> })).value;
+					return `${key}=${value}`;
+				}),
+			);
+			await navigator.clipboard.writeText(lines.join("\n"));
+			toast.success(`copied ${lines.length} variable${lines.length === 1 ? "" : "s"}`);
+		} catch (err) {
+			toast.error("failed to copy", {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		} finally {
+			setCopying(false);
+		}
+	};
 
 	const toggleReveal = async (id: string) => {
 		if (revealed[id] !== undefined) {
@@ -157,6 +179,19 @@ export function SecretEditor({ projectId }: { projectId: Id<"projects"> }) {
 
 	return (
 		<div className="overflow-hidden border border-border bg-card/40">
+			{!loading && secrets.length > 0 && (
+				<div className="flex items-center justify-between border-b border-border bg-card/40 px-3 py-2">
+					<span className="text-[10px] tracking-[0.14em] uppercase tabular-nums text-muted-foreground">
+						{secrets.length} variable{secrets.length === 1 ? "" : "s"}
+					</span>
+					<Button size="sm" variant="outline" onClick={copyAll} disabled={copying}>
+						{copying
+							? <CircleNotchIcon className="size-3.5 animate-spin" />
+							: <CopyIcon className="size-3.5" />}
+						copy all
+					</Button>
+				</div>
+			)}
 			<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] gap-px border-b border-border bg-border text-[10px] tracking-[0.14em] uppercase text-muted-foreground">
 				<div className="bg-card/60 px-3 py-2">name</div>
 				<div className="bg-card/60 px-3 py-2">value</div>

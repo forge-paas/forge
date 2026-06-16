@@ -11,7 +11,7 @@ import { CircleNotchIcon, PlayIcon, TrashIcon, TerminalWindowIcon } from "@phosp
 
 interface Command {
 	name: string;
-	service: string;
+	service?: string;
 	command: string;
 }
 
@@ -76,7 +76,7 @@ export function PostInstallPanel({
 							<div className="flex min-w-0 flex-col">
 								<span className="text-xs font-medium text-foreground">{c.name}</span>
 								<span className="truncate font-mono text-[10px] text-muted-foreground">
-									{c.service} · {c.command}
+									{c.service ? `${c.service} · ` : ""}{c.command}
 								</span>
 							</div>
 							<Button

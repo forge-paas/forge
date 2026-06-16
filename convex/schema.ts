@@ -16,6 +16,10 @@ export default defineSchema({
 		repoUrl: v.string(),
 		buildCommand: v.string(),
 		startCommand: v.string(),
+		postInstall: v.optional(v.array(v.object({
+			name: v.string(),
+			command: v.string(),
+		}))),
 	}).index("by_ownerId", ["ownerId"]),
 	nodes: defineTable({
 		userId: v.id("users"),
@@ -70,7 +74,7 @@ export default defineSchema({
 		deploymentId: v.id("deployments"),
 		nodeId: v.id("nodes"),
 		name: v.string(),
-		service: v.string(),
+		service: v.optional(v.string()),
 		command: v.string(),
 		status: v.union(
 			v.literal("queued"),
@@ -90,6 +94,7 @@ export default defineSchema({
 		infraId: v.optional(v.id("infraContainers")),
 		publicUrl: v.string(),
 		customDomainUrl: v.optional(v.string()),
+		customDomainTarget: v.optional(v.string()),
 		routes: v.optional(v.array(v.object({
 			name: v.string(),
 			hostname: v.string(),

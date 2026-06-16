@@ -15,6 +15,17 @@ export type ParsedEnvLine =
 	| { kind: "ok"; raw: string; line: number; key: string; value: string }
 	| { kind: "invalid"; raw: string; line: number; reason: string };
 
+export function stripQuotes(value: string): string {
+	if (
+		value.length >= 2 &&
+		((value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'")))
+	) {
+		return value.slice(1, -1);
+	}
+	return value;
+}
+
 export function parseEnvString(input: string): ParsedEnvLine[] {
 	return input.split("\n").map((raw, i) => {
 		const line = i + 1;
@@ -24,7 +35,7 @@ export function parseEnvString(input: string): ParsedEnvLine[] {
 		const eq = trimmed.indexOf("=");
 		if (eq < 1) return { kind: "invalid", raw, line, reason: "missing =" };
 		const key = trimmed.slice(0, eq).trim();
-		const value = trimmed.slice(eq + 1).trim();
+		const value = stripQuotes(trimmed.slice(eq + 1).trim());
 		if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) {
 			return { kind: "invalid", raw, line, reason: "invalid key" };
 		}

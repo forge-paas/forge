@@ -10,9 +10,13 @@ export const getRunsForDeployment = query({
 
 		const dep = await ctx.db.get(args.deploymentId);
 		if (!dep) throw new Error("Deployment not found");
-		if (!dep.infraId) return [];
-		const container = await ctx.db.get(dep.infraId);
-		if (!container || container.ownerId !== user._id) throw new Error("Forbidden");
+		const ownerId = dep.infraId
+			? (await ctx.db.get(dep.infraId))?.ownerId
+			: dep.projectId
+				? (await ctx.db.get(dep.projectId))?.ownerId
+				: undefined;
+		if (!ownerId) return [];
+		if (ownerId !== user._id) throw new Error("Forbidden");
 
 		const runs = await ctx.db.query("postInstallRuns")
 			.withIndex("by_deploymentId", q => q.eq("deploymentId", args.deploymentId))
@@ -34,13 +38,16 @@ export const getQueuedRuns = internalQuery({
 		return await Promise.all(queued.map(async (run) => {
 			const dep = await ctx.db.get(run.deploymentId);
 			const container = dep?.infraId ? await ctx.db.get(dep.infraId) : null;
+			const project = dep?.projectId ? await ctx.db.get(dep.projectId) : null;
 			return {
 				_id: run._id,
 				deploymentId: run.deploymentId,
 				name: run.name,
 				service: run.service,
 				command: run.command,
+				type: dep?.type ?? "infra",
 				containerName: container?.containerName ?? "",
+				repoUrl: project?.repoUrl ?? "",
 			};
 		}));
 	}

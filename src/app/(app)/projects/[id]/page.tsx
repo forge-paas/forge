@@ -3,20 +3,22 @@
 import * as React from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
 import { Topbar } from "@/components/app-shell/topbar";
-import { Panel, PanelBody } from "@/components/blueprint/panel";
+import { Panel, PanelBody, PanelFooter } from "@/components/blueprint/panel";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CopyToken } from "@/components/copy-token";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { SecretEditor } from "@/components/secret-editor";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
-import { ArrowRightIcon, GithubLogoIcon, RocketLaunchIcon, CircleNotchIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon, GithubLogoIcon, RocketLaunchIcon, CircleNotchIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { relativeTime, shortId } from "@/lib/format";
 
 export default function ProjectDetailPage() {
@@ -207,6 +209,7 @@ export default function ProjectDetailPage() {
 								<CopyToken label="repo url" value={project.repoUrl} />
 							</PanelBody>
 						</Panel>
+						<PostInstallEditor projectId={project._id} commands={project.postInstall ?? []} />
 						<Panel tag="DZ" label="Danger zone" caption="irreversible" className="border-destructive/40">
 							<PanelBody className="space-y-4 text-xs">
 								<div className="space-y-1">
@@ -251,6 +254,90 @@ function EnvironmentTab({ projectId }: { projectId: Id<"projects"> }) {
 				<SecretEditor projectId={projectId} />
 			</Panel>
 		</div>
+	);
+}
+
+function PostInstallEditor({ projectId, commands }: { projectId: Id<"projects">; commands: { name: string; command: string }[] }) {
+	const updatePostInstall = useMutation(api.projects.mutations.updateProjectPostInstall);
+	const [rows, setRows] = React.useState(commands);
+	const [saving, setSaving] = React.useState(false);
+
+	const dirty = JSON.stringify(rows) !== JSON.stringify(commands);
+
+	const setRow = (i: number, key: "name" | "command", value: string) => {
+		setRows(rows.map((r, idx) => (idx === i ? { ...r, [key]: value } : r)));
+	};
+	const addRow = () => setRows([...rows, { name: "", command: "" }]);
+	const removeRow = (i: number) => setRows(rows.filter((_, idx) => idx !== i));
+
+	const save = async () => {
+		const cleaned = rows
+			.map(r => ({ name: r.name.trim(), command: r.command.trim() }))
+			.filter(r => r.name || r.command);
+		setSaving(true);
+		try {
+			await updatePostInstall({ id: projectId, postInstall: cleaned });
+			setRows(cleaned);
+			toast.success("postinstall commands saved");
+		} catch (err) {
+			toast.error("failed to save", {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	return (
+		<Panel tag="PI" label="Postinstall" caption="run on demand · per deployment">
+			<PanelBody className="space-y-3 text-xs">
+				<p className="leading-relaxed text-muted-foreground">
+					On-demand commands runnable against any live deployment of this project, executed inside its container.
+				</p>
+				{rows.length === 0 ? (
+					<div className="border border-dashed border-border bg-card/40 px-3 py-3 text-[11px] text-muted-foreground">
+						No commands yet.
+					</div>
+				) : (
+					<div className="space-y-2">
+						{rows.map((r, i) => (
+							<div key={i} className="flex items-center gap-2">
+								<Input
+									value={r.name}
+									onChange={e => setRow(i, "name", e.target.value)}
+									placeholder="migrate"
+									className="h-8 w-40 shrink-0 font-mono text-xs"
+								/>
+								<Input
+									value={r.command}
+									onChange={e => setRow(i, "command", e.target.value)}
+									placeholder="npm run db:migrate"
+									className="h-8 flex-1 font-mono text-xs"
+								/>
+								<Button
+									variant="ghost"
+									size="icon-sm"
+									onClick={() => removeRow(i)}
+									aria-label="remove command"
+								>
+									<TrashIcon className="size-3.5" />
+								</Button>
+							</div>
+						))}
+					</div>
+				)}
+				<Button variant="outline" size="sm" onClick={addRow} className="gap-1.5">
+					<PlusIcon className="size-3.5" /> add command
+				</Button>
+			</PanelBody>
+			<PanelFooter>
+				<span>section PI · postinstall</span>
+				<Button size="sm" disabled={!dirty || saving} onClick={save}>
+					{saving && <CircleNotchIcon className="size-3.5 animate-spin" />}
+					save
+				</Button>
+			</PanelFooter>
+		</Panel>
 	);
 }
 

@@ -14,23 +14,41 @@ export const runPostInstall = mutation({
 
 		const dep = await ctx.db.get(args.deploymentId);
 		if (!dep) throw new Error("Deployment not found");
-		if (dep.type !== "infra" || !dep.infraId) throw new Error("Postinstall is only available for infra deployments");
-
-		const container = await ctx.db.get(dep.infraId);
-		if (!container || container.ownerId !== user._id) throw new Error("Forbidden");
 
 		if (dep.status !== "completed") {
 			throw new Error("Deployment must be running before postinstall commands can run");
 		}
 
-		const command = (container.postInstall ?? []).find(c => c.name === args.name);
+		if (dep.type === "infra") {
+			if (!dep.infraId) throw new Error("Infra container not found");
+			const container = await ctx.db.get(dep.infraId);
+			if (!container || container.ownerId !== user._id) throw new Error("Forbidden");
+
+			const command = (container.postInstall ?? []).find(c => c.name === args.name);
+			if (!command) throw new Error("Postinstall command not found");
+
+			return await ctx.db.insert("postInstallRuns", {
+				deploymentId: args.deploymentId,
+				nodeId: dep.nodeId,
+				name: command.name,
+				service: command.service,
+				command: command.command,
+				status: "queued",
+				output: "",
+			});
+		}
+
+		if (!dep.projectId) throw new Error("Project not found");
+		const project = await ctx.db.get(dep.projectId);
+		if (!project || project.ownerId !== user._id) throw new Error("Forbidden");
+
+		const command = (project.postInstall ?? []).find(c => c.name === args.name);
 		if (!command) throw new Error("Postinstall command not found");
 
 		return await ctx.db.insert("postInstallRuns", {
 			deploymentId: args.deploymentId,
 			nodeId: dep.nodeId,
 			name: command.name,
-			service: command.service,
 			command: command.command,
 			status: "queued",
 			output: "",
@@ -48,8 +66,12 @@ export const clearPostInstallRun = mutation({
 		if (!run) return;
 
 		const dep = await ctx.db.get(run.deploymentId);
-		const container = dep?.infraId ? await ctx.db.get(dep.infraId) : null;
-		if (!container || container.ownerId !== user._id) throw new Error("Forbidden");
+		const ownerId = dep?.infraId
+			? (await ctx.db.get(dep.infraId))?.ownerId
+			: dep?.projectId
+				? (await ctx.db.get(dep.projectId))?.ownerId
+				: undefined;
+		if (!ownerId || ownerId !== user._id) throw new Error("Forbidden");
 
 		await ctx.db.delete(args.id);
 	}

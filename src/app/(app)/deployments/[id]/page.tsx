@@ -15,6 +15,7 @@ import { CopyToken } from "@/components/copy-token";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmRedeployDialog } from "@/components/confirm-redeploy-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { CircleNotchIcon, GithubLogoIcon, HardDrivesIcon, FolderIcon, ProhibitIcon, CubeIcon, PulseIcon, GlobeIcon, ArrowSquareOutIcon } from "@phosphor-icons/react";
@@ -214,6 +215,14 @@ export default function DeploymentDetailPage() {
 					/>
 				)}
 
+				{dep.type === "project" && dep.project && dep.project.postInstall && dep.project.postInstall.length > 0 && (
+					<PostInstallPanel
+						deploymentId={dep._id}
+						commands={dep.project.postInstall}
+						canRun={dep.status === "completed"}
+					/>
+				)}
+
 				<Panel tag="C" label="Build output" caption="logs · stream">
 					<DeploymentLogStream deploymentId={dep._id} />
 					<PanelFooter>
@@ -244,7 +253,13 @@ export default function DeploymentDetailPage() {
 				)}
 
 				{dep.status === "completed" && (
-					<CustomDomainPanel deploymentId={dep._id} current={dep.customDomainUrl} />
+					<CustomDomainPanel
+						deploymentId={dep._id}
+						current={dep.customDomainUrl}
+						currentTarget={dep.customDomainTarget}
+						publicUrl={dep.publicUrl}
+						routes={dep.routes}
+					/>
 				)}
 
 				{dep.routes && dep.routes.length > 0 && (
@@ -315,10 +330,26 @@ export default function DeploymentDetailPage() {
 	);
 }
 
-function CustomDomainPanel({ deploymentId, current }: { deploymentId: Id<"deployments">; current?: string }) {
+function CustomDomainPanel({
+	deploymentId,
+	current,
+	currentTarget,
+	publicUrl,
+	routes,
+}: {
+	deploymentId: Id<"deployments">;
+	current?: string;
+	currentTarget?: string;
+	publicUrl: string;
+	routes?: { name: string; hostname: string; containerPort: number }[];
+}) {
 	const setCustomDomain = useAction(api.deployments.domains.setCustomDomain);
 	const [value, setValue] = React.useState("");
 	const [saving, setSaving] = React.useState(false);
+	const [target, setTarget] = React.useState(currentTarget ?? publicUrl);
+
+	const hasRoutes = !!routes && routes.length > 0;
+	const targetChanged = !!current && target !== (currentTarget ?? publicUrl);
 
 	const host = (current ?? value).trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "") || "app.example.com";
 	const labels = host.split(".").filter(Boolean);
@@ -327,7 +358,7 @@ function CustomDomainPanel({ deploymentId, current }: { deploymentId: Id<"deploy
 	const save = async (domain: string) => {
 		setSaving(true);
 		try {
-			await setCustomDomain({ id: deploymentId, customDomain: domain });
+			await setCustomDomain({ id: deploymentId, customDomain: domain, target });
 			toast.success(domain.trim() ? "custom domain set" : "custom domain removed");
 			setValue("");
 		} catch (err) {
@@ -359,6 +390,25 @@ function CustomDomainPanel({ deploymentId, current }: { deploymentId: Id<"deploy
 						</Button>
 					</div>
 				)}
+				{hasRoutes && (
+					<div className="space-y-1.5">
+						<span className="bp-label">maps to route</span>
+						<Select value={target} onValueChange={v => v && setTarget(v)} disabled={saving}>
+							<SelectTrigger className="h-8 w-full border-border bg-card/60 font-mono text-xs">
+								<SelectValue placeholder="select a route" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectGroup>
+									{routes!.map(r => (
+										<SelectItem key={r.hostname} value={r.hostname}>
+											{r.name} · {r.hostname} · :{r.containerPort}
+										</SelectItem>
+									))}
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+					</div>
+				)}
 				<div className="flex items-center gap-2">
 					<Input
 						value={value}
@@ -366,10 +416,15 @@ function CustomDomainPanel({ deploymentId, current }: { deploymentId: Id<"deploy
 						placeholder="app.example.com"
 						className="h-8 font-mono text-xs"
 						onKeyDown={e => {
-							if (e.key === "Enter" && value.trim() && !saving) save(value);
+							const domain = value.trim() || (targetChanged ? current! : "");
+							if (e.key === "Enter" && domain && !saving) save(domain);
 						}}
 					/>
-					<Button size="sm" disabled={saving || !value.trim()} onClick={() => save(value)}>
+					<Button
+						size="sm"
+						disabled={saving || (!value.trim() && !targetChanged)}
+						onClick={() => save(value.trim() || (targetChanged ? current! : value))}
+					>
 						{saving && <CircleNotchIcon className="size-3.5 animate-spin" />}
 						{current ? "update" : "add"}
 					</Button>

@@ -22,7 +22,10 @@ export const getCustomDomainMappings = internalQuery({
 		const all = await ctx.db.query("deployments").collect();
 		return all
 			.filter(d => !!d.customDomainUrl && d.status === "completed")
-			.map(d => ({ customDomain: d.customDomainUrl as string, generatedDomain: d.publicUrl }));
+			.map(d => ({
+					customDomain: d.customDomainUrl as string,
+					generatedDomain: d.customDomainTarget ?? d.publicUrl,
+				}));
 	},
 });
 
@@ -51,9 +54,16 @@ export const isCustomDomainTaken = internalQuery({
 });
 
 export const setCustomDomainUrl = internalMutation({
-	args: { id: v.id("deployments"), customDomainUrl: v.optional(v.string()) },
+	args: {
+		id: v.id("deployments"),
+		customDomainUrl: v.optional(v.string()),
+		customDomainTarget: v.optional(v.string()),
+	},
 	handler: async (ctx, args) => {
-		await ctx.db.patch(args.id, { customDomainUrl: args.customDomainUrl });
+		await ctx.db.patch(args.id, {
+			customDomainUrl: args.customDomainUrl,
+			customDomainTarget: args.customDomainTarget,
+		});
 	},
 });
 
@@ -76,7 +86,7 @@ export const syncCustomDomains = internalAction({
 });
 
 export const setCustomDomain = action({
-	args: { id: v.id("deployments"), customDomain: v.string() },
+	args: { id: v.id("deployments"), customDomain: v.string(), target: v.optional(v.string()) },
 	handler: async (ctx, args): Promise<void> => {
 		const user = await ctx.runQuery(api.users.queries.current);
 		if (!user) throw new Error("Unauthorized");
@@ -89,6 +99,7 @@ export const setCustomDomain = action({
 
 		const normalized = normalizeDomain(args.customDomain);
 
+		let target: string | undefined;
 		if (normalized) {
 			if (!DOMAIN_RE.test(normalized)) throw new Error("Invalid domain");
 			const taken = await ctx.runQuery(internal.deployments.domains.isCustomDomainTaken, {
@@ -96,11 +107,18 @@ export const setCustomDomain = action({
 				excludeId: args.id,
 			});
 			if (taken) throw new Error("Domain already in use by another deployment");
+
+			if (args.target) {
+				const valid = (dep.routes ?? []).some(r => r.hostname === args.target);
+				if (!valid && args.target !== dep.publicUrl) throw new Error("Invalid route target");
+				if (args.target !== dep.publicUrl) target = args.target;
+			}
 		}
 
 		await ctx.runMutation(internal.deployments.domains.setCustomDomainUrl, {
 			id: args.id,
 			customDomainUrl: normalized || undefined,
+			customDomainTarget: target,
 		});
 
 		await ctx.runAction(internal.deployments.domains.syncCustomDomains, {});
