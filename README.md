@@ -4,6 +4,8 @@ Forge is a self-hosted deployment platform. You connect your own servers, and
 Forge deploys Git projects and infrastructure services to them. It gives each
 deployment a public URL, manages environment secrets, and watches health.
 
+![Forge dashboard and deployment view](assets/forge_on_forge.png)
+
 Forge has two parts:
 
 - **Control plane** (this repo) — a Next.js web app backed by Convex. This is
@@ -26,6 +28,11 @@ The control plane never connects out to your servers. Agents always reach in.
 - **Environment / Secrets** — environment variables for a project or infra.
   Secrets are encrypted before they are stored.
 
+Each node reports its resources and a heartbeat so you can see the fleet at a
+glance:
+
+![Node fleet view](assets/node_view.png)
+
 ## How a deployment works
 
 1. You create a project or infra and assign it to a node.
@@ -35,6 +42,10 @@ The control plane never connects out to your servers. Agents always reach in.
 4. The agent reports status and health back to the control plane.
 5. Forge exposes the deployment through a Cloudflare Tunnel and assigns a public
    URL. You can also map a custom domain.
+
+Build output streams live while the agent works:
+
+![Live build output](assets/build_output.png)
 
 ## Requirements
 
