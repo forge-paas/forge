@@ -59,7 +59,7 @@ export const registerNode = action({
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
-				"name": `${nodeToken}-forgetunnel`,
+				"name": `${nodeToken}-buildpeckertunnel`,
 				"config_src": "cloudflare"
 			})
 		});

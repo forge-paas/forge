@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "Forge — deploy to your own nodes",
+	title: "Buildpecker — deploy to your own nodes",
 	description: "Vercel-class orchestration for the servers you actually own.",
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({
 			className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-mono", jetbrainsMono.variable)}
 		>
 			<body className="min-h-full flex flex-col bg-background text-foreground">
-				<Script id="forge-theme-init" strategy="beforeInteractive">
+				<Script id="buildpecker-theme-init" strategy="beforeInteractive">
 					{themeInitScript}
 				</Script>
 				<ClerkProvider>

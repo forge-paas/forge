@@ -56,7 +56,7 @@ export default function DashboardPage() {
 						Welcome back<span className="text-muted-foreground">.</span>
 					</h1>
 					<p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
-						Forge deploys your projects to the servers you own — no third-party hosting,
+						Buildpecker deploys your projects to the servers you own — no third-party hosting,
 						no cold starts you didn&apos;t buy. This is the floor plan.
 					</p>
 				</header>
@@ -214,10 +214,10 @@ export default function DashboardPage() {
 						</PanelBody>
 					</Panel>
 
-					<Panel tag="E" label="Schematic" caption="forge.v0.1">
+					<Panel tag="E" label="Schematic" caption="buildpecker.v0.1">
 						<PanelBody className="font-mono text-[11px] leading-relaxed text-muted-foreground">
 							<pre className="overflow-x-auto whitespace-pre-wrap">{`  ┌── client ──┐
-  │  forge ui  │
+  │ buildpecker│
   └─────┬──────┘
         │
   ┌─────▼──────┐    ┌──────────────┐
