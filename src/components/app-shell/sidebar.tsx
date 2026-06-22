@@ -35,7 +35,7 @@ const NAV: NavItem[] = [
 
 export function AppSidebar() {
 	const pathname = usePathname();
-	const stamp = pageRevisionStamp("forge");
+	const stamp = pageRevisionStamp("buildpecker");
 
 	return (
 		<aside className="flex h-screen w-[248px] shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground">
@@ -44,7 +44,7 @@ export function AppSidebar() {
 					<LightningIcon weight="fill" className="size-4" />
 				</div>
 				<div className="flex flex-col leading-none">
-					<span className="text-sm font-medium tracking-[0.18em] uppercase">forge</span>
+					<span className="text-sm font-medium tracking-[0.18em] uppercase">buildpecker</span>
 					<span className="bp-caption text-[9px]">{stamp.rev} · {stamp.date}</span>
 				</div>
 			</div>

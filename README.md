@@ -1,16 +1,16 @@
-# Forge
+# Buildpecker
 
-Forge is a self-hosted deployment platform. You connect your own servers, and
-Forge deploys Git projects and infrastructure services to them. It gives each
+Buildpecker is a self-hosted deployment platform. You connect your own servers, and
+Buildpecker deploys Git projects and infrastructure services to them. It gives each
 deployment a public URL, manages environment secrets, and watches health.
 
-![Forge dashboard and deployment view](assets/forge_on_forge.png)
+![Buildpecker dashboard and deployment view](assets/buildpecker_on_buildpecker.png)
 
-Forge has two parts:
+Buildpecker has two parts:
 
 - **Control plane** (this repo) — a Next.js web app backed by Convex. This is
   where you manage servers, projects, deployments, and secrets.
-- **Agent** — a separate Go program ([`forge-agent`](../forge-agent)) that runs
+- **Agent** — a separate Go program ([`buildpecker-agent`](../buildpecker-agent)) that runs
   on each of your servers. It polls the control plane over HTTP and does the
   actual work: building images, running containers, and reporting status.
 
@@ -20,7 +20,7 @@ The control plane never connects out to your servers. Agents always reach in.
 
 - **Node** — one of your servers running the agent. Reports CPU, memory, disk,
   and a heartbeat.
-- **Project** — a Git repository to deploy. Forge detects the framework and
+- **Project** — a Git repository to deploy. Buildpecker detects the framework and
   builds it with [Nixpacks](https://nixpacks.com).
 - **Infra** — a prebuilt service (database, cache, etc.) deployed from a Docker
   Compose template.
@@ -40,7 +40,7 @@ glance:
 3. The agent fetches the deployment's secrets, runs any install and
    post-install steps, then builds and starts the container.
 4. The agent reports status and health back to the control plane.
-5. Forge exposes the deployment through a Cloudflare Tunnel and assigns a public
+5. Buildpecker exposes the deployment through a Cloudflare Tunnel and assigns a public
    URL. You can also map a custom domain.
 
 Build output streams live while the agent works:

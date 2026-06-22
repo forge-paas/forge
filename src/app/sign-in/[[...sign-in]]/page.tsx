@@ -6,7 +6,7 @@ import { LightningIcon, CpuIcon, MemoryIcon, HardDriveIcon } from "@phosphor-ico
 import { pageRevisionStamp } from "@/lib/format";
 
 export default function SignInPage() {
-	const stamp = pageRevisionStamp("forge");
+	const stamp = pageRevisionStamp("buildpecker");
 
 	return (
 		<div className="dark relative min-h-screen w-full overflow-hidden bg-background text-foreground">
@@ -22,7 +22,7 @@ export default function SignInPage() {
 							<LightningIcon weight="fill" className="size-5" />
 						</div>
 						<div className="flex flex-col leading-none">
-							<span className="text-base font-medium tracking-[0.18em] uppercase">forge</span>
+							<span className="text-base font-medium tracking-[0.18em] uppercase">buildpecker</span>
 							<span className="bp-caption text-[10px]">orchestrator · v0.1.0</span>
 						</div>
 					</header>
@@ -39,7 +39,7 @@ export default function SignInPage() {
 								<span className="text-primary">servers you own.</span>
 							</h1>
 							<p className="max-w-md text-xs leading-relaxed text-muted-foreground">
-								Forge sketches a single control surface over your VPS fleet — projects, nodes, encrypted secrets,
+								Buildpecker sketches a single control surface over your VPS fleet — projects, nodes, encrypted secrets,
 								queued builds. No third-party host. No black box.
 							</p>
 						</div>
@@ -108,14 +108,14 @@ export default function SignInPage() {
 								<div className="flex size-8 items-center justify-center border border-border bg-primary text-primary-foreground">
 									<LightningIcon weight="fill" className="size-4" />
 								</div>
-								<span className="text-sm font-medium tracking-[0.18em] uppercase">forge</span>
+								<span className="text-sm font-medium tracking-[0.18em] uppercase">buildpecker</span>
 							</div>
 						</div>
 						<div className="flex flex-col gap-2">
 							<span className="bp-label">access · sign in</span>
 							<h2 className="text-2xl font-medium tracking-[-0.01em] text-foreground">Authenticate</h2>
 							<p className="text-[11px] leading-relaxed text-muted-foreground">
-								Sign in to your forge workspace. New here? Use the link below the form to create an account.
+								Sign in to your buildpecker workspace. New here? Use the link below the form to create an account.
 							</p>
 						</div>
 

@@ -50,17 +50,17 @@ export const getNodeMetrics = action({
 		const step = Math.max(5, Math.floor((range * 60) / 180));
 
 		const [cpu, memory, disk] = await Promise.all([
-			rangeQuery(promUrl, `forge_node_cpu_percent${sel}`, start, end, step),
+			rangeQuery(promUrl, `buildpecker_node_cpu_percent${sel}`, start, end, step),
 			rangeQuery(
 				promUrl,
-				`100 * forge_node_memory_used_bytes${sel} / forge_node_memory_total_bytes${sel}`,
+				`100 * buildpecker_node_memory_used_bytes${sel} / buildpecker_node_memory_total_bytes${sel}`,
 				start,
 				end,
 				step,
 			),
 			rangeQuery(
 				promUrl,
-				`100 * forge_node_disk_used_bytes${sel} / forge_node_disk_total_bytes${sel}`,
+				`100 * buildpecker_node_disk_used_bytes${sel} / buildpecker_node_disk_total_bytes${sel}`,
 				start,
 				end,
 				step,

@@ -14,7 +14,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readStoredTheme(): Theme {
 	if (typeof window === "undefined") return "dark";
-	const stored = window.localStorage.getItem("forge-theme");
+	const stored = window.localStorage.getItem("buildpecker-theme");
 	return stored === "light" || stored === "dark" ? stored : "dark";
 }
 
@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 	const setTheme = useCallback((next: Theme) => {
 		setThemeState(next);
 		if (typeof window !== "undefined") {
-			window.localStorage.setItem("forge-theme", next);
+			window.localStorage.setItem("buildpecker-theme", next);
 		}
 	}, []);
 
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 		setThemeState((prev) => {
 			const next = prev === "dark" ? "light" : "dark";
 			if (typeof window !== "undefined") {
-				window.localStorage.setItem("forge-theme", next);
+				window.localStorage.setItem("buildpecker-theme", next);
 			}
 			return next;
 		});
@@ -67,5 +67,5 @@ export function useTheme() {
 }
 
 export const themeInitScript = `
-(function(){try{var t=localStorage.getItem('forge-theme');if(t!=='light'){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}}catch(e){document.documentElement.classList.add('dark');}})();
+(function(){try{var t=localStorage.getItem('buildpecker-theme');if(t!=='light'){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}}catch(e){document.documentElement.classList.add('dark');}})();
 `.trim();
