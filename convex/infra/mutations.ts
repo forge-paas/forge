@@ -17,6 +17,8 @@ export const createInfraContainer = mutation({
 			service: v.string(),
 			command: v.string(),
 		})),
+		configFileName: v.optional(v.string()),
+		config: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		return await ctx.db.insert("infraContainers", {
@@ -27,6 +29,8 @@ export const createInfraContainer = mutation({
 			composeYaml: args.composeYaml,
 			postInstall: args.postInstall,
 			healthCheck: args.healthCheck,
+			configFileName: args.configFileName,
+			config: args.config,
 		});
 	}
 });

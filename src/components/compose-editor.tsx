@@ -9,11 +9,13 @@ export function ComposeEditor({
 	onChange,
 	className,
 	placeholder = "services:\n  app:\n    image: ...",
+	label = "compose · yaml",
 }: {
 	value: string;
 	onChange: (next: string) => void;
 	className?: string;
 	placeholder?: string;
+	label?: string;
 }) {
 	const lineCount = React.useMemo(
 		() => (value === "" ? 0 : value.split("\n").length),
@@ -23,7 +25,7 @@ export function ComposeEditor({
 	return (
 		<div className={cn("flex flex-col gap-2", className)}>
 			<div className="flex items-center justify-between">
-				<span className="bp-label">compose · yaml</span>
+				<span className="bp-label">{label}</span>
 				<span className="text-[10px] tracking-[0.14em] uppercase tabular-nums text-muted-foreground">
 					{lineCount} lines
 				</span>

@@ -19,7 +19,13 @@ function readStoredTheme(): Theme {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-	const [theme, setThemeState] = useState<Theme>(() => readStoredTheme());
+	// Start with the same value the server renders ("dark") so the first client
+	// render matches the SSR-ed HTML, then sync from storage after mount.
+	const [theme, setThemeState] = useState<Theme>("dark");
+
+	useEffect(() => {
+		setThemeState(readStoredTheme());
+	}, []);
 
 	useEffect(() => {
 		applyTheme(theme);

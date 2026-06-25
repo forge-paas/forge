@@ -60,6 +60,7 @@ export default function InfraTemplateDetailPage() {
 	const deployInfra = useAction(api.infra.actions.deployInfra);
 
 	const [yaml, setYaml] = React.useState<string | null>(null);
+	const [config, setConfig] = React.useState<string | null>(null);
 	const [containerName, setContainerName] = React.useState("");
 	const [nodeId, setNodeId] = React.useState<Id<"nodes"> | undefined>();
 	const [envString, setEnvString] = React.useState("");
@@ -74,6 +75,7 @@ export default function InfraTemplateDetailPage() {
 
 	if (template && yaml === null) {
 		setYaml(template.composeYaml);
+		setConfig(template.config ?? "");
 		setContainerName(`${template.identifier}-${nameSuffix}`);
 		setPostInstall(
 			(template.postInstall ?? []).map((c) => ({ name: c.name, service: c.service, command: c.command })),
@@ -114,6 +116,8 @@ export default function InfraTemplateDetailPage() {
 	}
 
 	const dirty = yaml !== null && yaml !== template.composeYaml;
+	const hasConfig = !!template.configFileName;
+	const configDirty = hasConfig && config !== null && config !== (template.config ?? "");
 	const noNodes = nodes?.length === 0;
 	const canBePublic = !!template.canBePublic;
 	const goingPublic = canBePublic && isPublic;
@@ -157,6 +161,8 @@ export default function InfraTemplateDetailPage() {
 				composeYaml: yaml,
 				postInstall: validPostInstall.length > 0 ? validPostInstall : undefined,
 				healthCheck: validHealthCheck,
+				configFileName: hasConfig ? template.configFileName : undefined,
+				config: hasConfig ? (config ?? "") : undefined,
 			});
 			if (envString.trim() !== "") {
 				const envId = await createInfraEnvironment({ id: containerId });
@@ -226,6 +232,34 @@ export default function InfraTemplateDetailPage() {
 						</Button>
 					</PanelFooter>
 				</Panel>
+
+				{hasConfig && (
+					<Panel tag="F" label="Config" caption={`editable · ${template.configFileName}`}>
+						<PanelBody className="space-y-3">
+							<p className="text-[11px] leading-relaxed text-muted-foreground">
+								Edit the <code className="text-foreground">{template.configFileName}</code> mounted into this deployment. Changes here never modify the original template.
+							</p>
+							<ComposeEditor
+								value={config ?? ""}
+								onChange={setConfig}
+								label={`config · ${template.configFileName}`}
+								placeholder=""
+							/>
+						</PanelBody>
+						<PanelFooter>
+							<span>{configDirty ? "modified · not saved" : "matches template"}</span>
+							<Button
+								variant="ghost"
+								size="sm"
+								disabled={!configDirty}
+								onClick={() => setConfig(template.config ?? "")}
+								className="gap-1.5"
+							>
+								<ArrowCounterClockwiseIcon className="size-3.5" /> reset
+							</Button>
+						</PanelFooter>
+					</Panel>
+				)}
 
 				<Panel tag="P" label="Postinstall" caption="run on demand · after deploy">
 					<PanelBody className="space-y-3">
@@ -313,7 +347,7 @@ export default function InfraTemplateDetailPage() {
 							<Input
 								value={healthCheck.command}
 								onChange={(e) => setHealthCheck((prev) => ({ ...prev, command: e.target.value }))}
-								placeholder="pg_isready -U postgres"
+								placeholder="command (e.g: pg_isready -U postgres)"
 								className="flex-1 bg-card/60 font-mono text-[11px]"
 							/>
 						</div>

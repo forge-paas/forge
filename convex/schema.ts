@@ -42,7 +42,7 @@ export default defineSchema({
 		version: v.string(),
 		logoUrl: v.string(),
 		composeYaml: v.string(),
-		canBePublic: v.optional(v.boolean()),
+		canBePublic: v.boolean(),
 		postInstall: v.optional(v.array(v.object({
 			name: v.string(),
 			service: v.string(),
@@ -52,6 +52,8 @@ export default defineSchema({
 			service: v.string(),
 			command: v.string(),
 		})),
+		configFileName: v.optional(v.string()),
+		config: v.optional(v.string()),
 	}),
 	infraContainers: defineTable({
 		nodeId: v.id("nodes"),
@@ -68,6 +70,8 @@ export default defineSchema({
 			service: v.string(),
 			command: v.string(),
 		})),
+		configFileName: v.optional(v.string()),
+		config: v.optional(v.string()),
 	})
 		.index("by_ownerId", ["ownerId"])
 		.index("by_nodeId", ["nodeId"]),
